@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Calculateur Poker Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet" />
+    <style>
+        #clockDisplay {
+            font-family: 'Roboto Mono', 'Courier New', Courier, monospace;
+            font-size: 6em;
+            letter-spacing: 0.08em;
+            background: transparent;
+            border-radius: 16px;
+            padding: 0.25em 0.3em;
+            box-shadow: none;
+            margin: 20px 0 10px 0;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+        .level-info { font-size: 1.2em; margin-bottom: 0.5em; }
+        .level-info strong { font-weight: bold; }
+        .next-level-info { font-size: 1.1em; color: #555; margin-bottom: 1.2em; }
+        .tab-content { display: none; }
+        .tab-content.is-active { display: block; }
+        .clock-box-relative { position: relative; }
+        .clock-controls-group {
+            position: absolute; top: 15px; left: 15px; z-index: 10;
+            display: flex; gap: 8px;
+        }
+        .clock-icon-btn {
+            background: none; border: none; border-radius: 50%;
+            width: 2.3em; height: 2.3em; display: flex; align-items: center; justify-content: center;
+            font-size: 1.7em; color: #3273dc; transition: background 0.2s, color 0.2s; cursor: pointer;
+        }
+        .clock-icon-btn:hover { background: #f3e4e7; color: #933557; }
+        .clock-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        @media (max-width: 768px) {
+            #clockDisplay { font-size: 3em; }
+            .clock-controls-group { top: 5px; left: 5px; }
+            .clock-icon-btn { width: 1.7em; height: 1.7em; font-size: 1.1em; }
+        }
+        .table-input input, .table-input select { width: 100%; }
+        .is-pointer { cursor: pointer; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .chips-total { font-weight: bold; margin-left: 2rem; }
+        .warning-msg { color: #ff8800; font-size: 0.95em; margin-top: 0.5em; }
+        .color-default-row td { font-weight: bold; background: #f6f6f6; border-bottom: 1px solid #ddd; }
+        .param-level-num { width: 3em; text-align: center; font-weight: bold; background: #f9f9f9; }
+        .param-actions { margin-bottom: 1em; }
+        .param-global-actions { margin-bottom: 2em; }
+    </style>
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <div class="tabs is-boxed">
+            <ul>
+                <li class="is-active" onclick="showTab('clock', event)"><a>Horloge</a></li>
+                <li onclick="showTab('results', event)"><a>Résultats</a></li>
+                <li onclick="showTab('params', event)"><a>Paramètres</a></li>
+            </ul>
+        </div>
+
+        <!-- Onglet Horloge -->
+        <div id="clockTab" class="tab-content is-active">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="box has-text-centered clock-box-relative">
+                        <div class="clock-controls-group">
+                            <button id="playPauseBtn" class="clock-icon-btn" onclick="togglePlayPause()" title="Play/Pause">
+                                <span id="playPauseIcon">
+                                    <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                                </span>
+                            </button>
+                            <button class="clock-icon-btn" onclick="resetTimer()" title="Réinitialiser">
+                                <span>
+                                    <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6a6.006 6.006 0 0 1-5.65-4H4.07c.5 4.01 3.92 7 7.93 7 4.42 0 8-3.58 8-8s-3.58-8-8-8z" fill="currentColor"/></svg>
+                                </span>
+                            </button>
+                        </div>
+                        <div id="clockDisplay">00:00:00</div>
+                        <div class="level-info mb-1" id="currentLevel"><strong>Niveau : -</strong></div>
+                        <div class="next-level-info" id="nextLevel">Prochain niveau : --</div>
+                        <div class="level-info mb-2">
+                            <span id="currentTime"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Onglet Résultats -->
+        <div id="resultsTab" class="tab-content">
+            <div class="box">
+                <table class="table is-fullwidth is-striped table-input" id="inputTable">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Stack Départ (SD)</th>
+                            <th>Recave (R)</th>
+                            <th>Stack Arrivée (SA)</th>
+                            <th>Bust Rank</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="playerRows"></tbody>
+                </table>
+                <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+                    <div class="buttons">
+                        <button class="button is-success" onclick="calculate()">Calculer</button>
+                        <button class="button is-warning" onclick="exportCSV()">Exporter CSV</button>
+                        <button class="button is-danger" onclick="resetAll()">Reset</button>
+                    </div>
+                    <div class="chips-total" id="chipsTotal"></div>
+                </div>
+                <div id="warningMsg" class="warning-msg"></div>
+            </div>
+            <div id="resultsSection" class="box mt-2" style="display:none;">
+                <h2 class="subtitle">Résultats</h2>
+                <table class="table is-fullwidth is-striped" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Position</th>
+                            <th>Joueur</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Onglet Paramètres -->
+        <div id="paramsTab" class="tab-content">
+            <div class="box">
+
+                <!-- Actions globales import/export -->
+                <div class="buttons param-global-actions">
+                    <button class="button is-info" onclick="exportAllParams()">💾 Exporter tous les paramètres</button>
+                    <label class="button is-warning" style="margin-bottom:0;">
+                        📥 Importer tous les paramètres
+                        <input type="file" accept=".json,application/json" style="display:none" onchange="importAllParams(event)">
+                    </label>
+                </div>
+
+                <!-- Section Joueurs -->
+                <h2 class="subtitle">Joueurs</h2>
+                <table class="table is-fullwidth mb-6" id="playersTable">
+                    <thead>
+                        <tr>
+                            <th style="width:3em">#</th>
+                            <th>Nom du joueur</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="playersParamBody"></tbody>
+                </table>
+                <div class="buttons param-actions mb-4">
+                    <button class="button is-small" onclick="addPlayerParamRow()">+ Ajouter joueur</button>
+                    <button class="button is-small is-danger" onclick="clearPlayersParam()">× Tout supprimer</button>
+                    <button class="button is-small is-info" onclick="savePlayersParam()">💾 Sauvegarder</button>
+                    <button class="button is-small is-warning" onclick="loadPlayersParam()">📥 Charger</button>
+                </div>
+
+                <!-- Section Niveaux -->
+                <h2 class="subtitle">Paramètres des niveaux</h2>
+                <table class="table is-fullwidth mb-6" id="levelsTable">
+                    <thead>
+                        <tr>
+                            <th style="width:3em">Niveau</th>
+                            <th>SB</th>
+                            <th>BB</th>
+                            <th>Ante</th>
+                            <th>Durée (min)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="levelsBody"></tbody>
+                </table>
+                <div class="buttons param-actions mb-4">
+                    <button class="button is-small" onclick="addLevelRow()">+ Ajouter niveau</button>
+                    <button class="button is-small is-danger" onclick="clearLevels()">× Tout supprimer</button>
+                    <button class="button is-small is-info" onclick="saveLevelsParam()">💾 Sauvegarder</button>
+                    <button class="button is-small is-warning" onclick="loadLevelsParam()">📥 Charger</button>
+                </div>
+
+                <!-- Section Couleurs de l'horloge -->
+                <h2 class="subtitle">Couleurs de l'horloge</h2>
+                <table class="table is-fullwidth" id="colorSettingsTable">
+                    <thead>
+                        <tr>
+                            <th>Temps maximum (MM:SS)</th>
+                            <th>Couleur</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="colorSettingsBody">
+                        <tr class="color-default-row">
+                            <td>Couleur par défaut</td>
+                            <td>
+                                <input id="colorDefaultInput" class="input" type="color" value="#933557" onchange="updateColorSettings();updateClockColor(timeLeft);">
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="buttons param-actions">
+                    <button class="button is-small" onclick="addColorSettingRow()">+ Ajouter seuil</button>
+                    <button class="button is-small is-info" onclick="saveColorsParam()">💾 Sauvegarder</button>
+                    <button class="button is-small is-warning" onclick="loadColorsParam()">📥 Charger</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// === Gestion des onglets ===
+function showTab(tabName, evt) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('is-active'));
+    document.querySelectorAll('.tabs li').forEach(li => li.classList.remove('is-active'));
+    document.getElementById(tabName + 'Tab').classList.add('is-active');
+    evt.currentTarget.classList.add('is-active');
+}
+
+// === Gestion des joueurs (PARAMÈTRES) ===
+function addPlayerParamRow(name = '') {
+    const tbody = document.getElementById('playersParamBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td class="param-level-num"></td>
+        <td><input class="input" type="text" placeholder="Nom du joueur" value="${name}"></td>
+        <td>
+            <button class="button is-small is-danger" onclick="removePlayerParamRow(this)">
+                &times;
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    updatePlayerParamNumbers();
+    syncPlayersToResults();
+}
+function removePlayerParamRow(btn) {
+    btn.closest('tr').remove();
+    updatePlayerParamNumbers();
+    syncPlayersToResults();
+}
+function clearPlayersParam() {
+    document.getElementById('playersParamBody').innerHTML = '';
+    syncPlayersToResults();
+}
+function updatePlayerParamNumbers() {
+    const rows = document.querySelectorAll('#playersParamBody tr');
+    rows.forEach((row, idx) => {
+        const numCell = row.querySelector('.param-level-num');
+        if(numCell) numCell.textContent = idx + 1;
+    });
+}
+
+// === Sauvegarde/Chargement Joueurs ===
+function savePlayersParam() {
+    const players = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
+        row.querySelector('input').value.trim()
+    );
+    localStorage.setItem('poker_joueurs', JSON.stringify(players));
+    alert('Joueurs sauvegardés !');
+}
+function loadPlayersParam() {
+    const data = localStorage.getItem('poker_joueurs');
+    if (!data) { alert("Aucune sauvegarde trouvée."); return; }
+    clearPlayersParam();
+    JSON.parse(data).forEach(name => addPlayerParamRow(name));
+    syncPlayersToResults();
+}
+
+// === Synchronisation joueurs Paramètres -> Résultats ===
+function syncPlayersToResults() {
+    const playerNames = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
+        row.querySelector('input').value.trim() || `Joueur ${Array.from(row.parentNode.children).indexOf(row)+1}`
+    );
+    const tbody = document.getElementById('playerRows');
+    // Sauvegarde des autres champs si possible
+    let oldData = [];
+    Array.from(tbody.children).forEach((row, idx) => {
+        oldData.push({
+            SD: row.querySelectorAll('input')[0]?.value || '',
+            R: row.querySelectorAll('input')[1]?.value || '',
+            SA: row.querySelectorAll('input')[2]?.value || '',
+            bust: row.querySelector('select')?.value || ''
+        });
+    });
+    tbody.innerHTML = '';
+    playerNames.forEach((name, idx) => {
+        const old = oldData[idx] || {};
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${name}</td>
+            <td><input class="input" type="number" min="0" value="${old.SD||400}" placeholder="Stack Départ" oninput="updateChipsAndWarning()"></td>
+            <td><input class="input" type="number" min="0" value="${old.R||''}" placeholder="Recave" oninput="updateChipsAndWarning()"></td>
+            <td><input class="input" type="number" min="0" value="${old.SA||''}" placeholder="Stack Arrivée" oninput="updateChipsAndWarning()"></td>
+            <td>
+                <div class="select is-fullwidth">
+                    <select onchange="updateChipsAndWarning()">
+                        ${getBustOptions(old.bust, playerNames.length)}
+                    </select>
+                </div>
+            </td>
+            <td></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    updateBustRankOptions();
+    updateChipsAndWarning();
+}
+
+// === Gestion des niveaux ===
+function addLevelRow(sb = '', bb = '', ante = '', duration = '') {
+    const tbody = document.getElementById('levelsBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td class="param-level-num"></td>
+        <td><input class="input" type="number" min="0" value="${sb}"></td>
+        <td><input class="input" type="number" min="0" value="${bb}"></td>
+        <td><input class="input" type="number" min="0" value="${ante}"></td>
+        <td><input class="input" type="number" min="1" value="${duration}"></td>
+        <td>
+            <button class="button is-small is-info" onclick="transferLevel(this)" title="Transférer ce niveau vers l'horloge">
+                <span class="icon">
+                    <svg width="1.1em" height="1.1em" viewBox="0 0 24 24" fill="none">
+                        <path d="M19 12h-6v8h-2v-8H5l7-8 7 8zm-14 8h14v2H5v-2z" fill="currentColor"/>
+                    </svg>
+                </span>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    updateLevelNumbers();
+}
+function updateLevelNumbers() {
+    const rows = document.querySelectorAll('#levelsBody tr');
+    rows.forEach((row, idx) => {
+        const numCell = row.querySelector('.param-level-num');
+        if(numCell) numCell.textContent = idx + 1;
+    });
+}
+function transferLevel(btn) {
+    if (!isPaused || clockRunning) {
+        alert("Veuillez mettre le chronomètre sur pause avant de transférer un niveau !");
+        return;
+    }
+    const row = btn.closest('tr');
+    const rows = Array.from(document.querySelectorAll('#levelsBody tr'));
+    const idx = rows.indexOf(row);
+    currentLevelIndex = idx;
+    const inputs = row.querySelectorAll('input');
+    timeLeft = parseInt(inputs[3].value) * 60;
+    updateCurrentLevelDisplay();
+    updateClockDisplay(timeLeft);
+    setPlayPauseIcon();
+    updateClockColor(timeLeft);
+}
+function clearLevels() {
+    document.getElementById('levelsBody').innerHTML = '';
+    updateLevelNumbers();
+}
+
+// === Sauvegarde/Chargement Niveaux ===
+function saveLevelsParam() {
+    const levels = Array.from(document.querySelectorAll('#levelsBody tr')).map(row => {
+        const inputs = row.querySelectorAll('input');
+        return {
+            sb: inputs[0].value,
+            bb: inputs[1].value,
+            ante: inputs[2].value,
+            duration: inputs[3].value
+        };
+    });
+    localStorage.setItem('poker_niveaux', JSON.stringify(levels));
+    alert('Niveaux sauvegardés !');
+}
+function loadLevelsParam() {
+    const data = localStorage.getItem('poker_niveaux');
+    if (!data) { alert("Aucune sauvegarde trouvée."); return; }
+    clearLevels();
+    JSON.parse(data).forEach(lvl => addLevelRow(lvl.sb, lvl.bb, lvl.ante, lvl.duration));
+    updateLevelNumbers();
+}
+
+// === Couleurs dynamiques de l'horloge ===
+let colorSettings = [];
+let colorDefault = "#933557";
+function addColorSettingRow(time = '', color = '#933557') {
+    const tbody = document.getElementById('colorSettingsBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <input class="input time-input" type="text" placeholder="MM:SS" value="${time}"
+                   pattern="[0-9]{1,2}:[0-5][0-9]">
+        </td>
+        <td>
+            <input class="input" type="color" value="${color}">
+        </td>
+        <td>
+            <button class="button is-small is-danger" onclick="removeColorSettingRow(this)">
+                ×
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+    updateColorSettings();
+}
+function removeColorSettingRow(btn) {
+    btn.closest('tr').remove();
+    updateColorSettings();
+}
+function updateColorSettings() {
+    colorSettings = [];
+    let colorDefaultInput = document.getElementById('colorDefaultInput');
+    colorDefault = colorDefaultInput ? colorDefaultInput.value : "#933557";
+    document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)').forEach(row => {
+        const timeInput = row.querySelector('.time-input');
+        const colorInput = row.querySelector('input[type="color"]');
+        if(timeInput.value && colorInput.value) {
+            const [minutes, seconds] = timeInput.value.split(':').map(Number);
+            const totalSeconds = minutes * 60 + seconds;
+            colorSettings.push({
+                threshold: totalSeconds,
+                color: colorInput.value,
+                display: timeInput.value
+            });
+        }
+    });
+    colorSettings.sort((a, b) => b.threshold - a.threshold);
+    updateClockColor(timeLeft);
+}
+function updateClockColor(seconds) {
+    let selectedColor = colorDefault;
+    for(let i = 0; i < colorSettings.length; i++) {
+        if(seconds <= colorSettings[i].threshold) {
+            selectedColor = colorSettings[i].color;
+        }
+    }
+    document.getElementById('clockDisplay').style.color = selectedColor;
+}
+
+// === Sauvegarde/Chargement Couleurs ===
+function saveColorsParam() {
+    let colorDefaultInput = document.getElementById('colorDefaultInput');
+    let colorDefault = colorDefaultInput ? colorDefaultInput.value : "#933557";
+    const colors = {
+        default: colorDefault,
+        steps: Array.from(document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)')).map(row => {
+            const timeInput = row.querySelector('.time-input');
+            const colorInput = row.querySelector('input[type="color"]');
+            return {
+                time: timeInput.value,
+                color: colorInput.value
+            };
+        })
+    };
+    localStorage.setItem('poker_couleurs', JSON.stringify(colors));
+    alert('Couleurs sauvegardées !');
+}
+function loadColorsParam() {
+    const data = localStorage.getItem('poker_couleurs');
+    if (!data) { alert("Aucune sauvegarde trouvée."); return; }
+    const colors = JSON.parse(data);
+    document.getElementById('colorDefaultInput').value = colors.default || "#933557";
+    document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)').forEach(row => row.remove());
+    if (colors.steps) {
+        colors.steps.forEach(step => addColorSettingRow(step.time, step.color));
+    }
+    updateColorSettings();
+    updateClockColor(timeLeft);
+}
+
+// === Export/Import global paramètres ===
+function exportAllParams() {
+    // Récupérer joueurs
+    const joueurs = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
+        row.querySelector('input').value.trim()
+    );
+    // Récupérer niveaux
+    const niveaux = Array.from(document.querySelectorAll('#levelsBody tr')).map(row => {
+        const inputs = row.querySelectorAll('input');
+        return {
+            sb: inputs[0].value,
+            bb: inputs[1].value,
+            ante: inputs[2].value,
+            duration: inputs[3].value
+        };
+    });
+    // Récupérer couleurs
+    let colorDefaultInput = document.getElementById('colorDefaultInput');
+    let colorDefault = colorDefaultInput ? colorDefaultInput.value : "#933557";
+    const couleurs = {
+        default: colorDefault,
+        steps: Array.from(document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)')).map(row => {
+            const timeInput = row.querySelector('.time-input');
+            const colorInput = row.querySelector('input[type="color"]');
+            return {
+                time: timeInput.value,
+                color: colorInput.value
+            };
+        })
+    };
+    const obj = { joueurs, niveaux, couleurs };
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "poker_parametres.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function importAllParams(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const obj = JSON.parse(e.target.result);
+            // Joueurs
+            clearPlayersParam();
+            (obj.joueurs || []).forEach(name => addPlayerParamRow(name));
+            // Niveaux
+            clearLevels();
+            (obj.niveaux || []).forEach(lvl => addLevelRow(lvl.sb, lvl.bb, lvl.ante, lvl.duration));
+            updateLevelNumbers();
+            // Couleurs
+            document.getElementById('colorDefaultInput').value = (obj.couleurs && obj.couleurs.default) || "#933557";
+            document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)').forEach(row => row.remove());
+            if (obj.couleurs && obj.couleurs.steps) {
+                obj.couleurs.steps.forEach(step => addColorSettingRow(step.time, step.color));
+            }
+            updateColorSettings();
+            updateClockColor(timeLeft);
+            alert("Paramètres importés !");
+        } catch(e) {
+            alert("Erreur lors de l'import du fichier : " + e);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = ""; // permet de réimporter le même fichier si besoin
+}
+
+// === Horloge ===
+let timer = null, currentLevelIndex = 0, timeLeft = 0, isPaused = true, clockRunning = false, clockSyncTimeout = null;
+function updateClockDisplay(seconds) {
+    seconds = Math.max(0, seconds);
+    const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const mins = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    document.getElementById('clockDisplay').textContent = `${hrs}:${mins}:${secs}`;
+    updateClockColor(seconds);
+}
+function togglePlayPause() {
+    const rows = document.querySelectorAll('#levelsBody tr');
+    if (rows.length === 0) return;
+    if (!clockRunning) {
+        const row = rows[currentLevelIndex] || rows[0];
+        if (timeLeft <= 0) {
+            timeLeft = parseInt(row.querySelector('input:nth-child(5)').value) * 60;
+        }
+        clockRunning = true;
+        isPaused = false;
+        syncClockTick();
+    } else {
+        isPaused = !isPaused;
+    }
+    setPlayPauseIcon();
+    updateClockColor(timeLeft);
+}
+function setPlayPauseIcon() {
+    const iconSpan = document.getElementById('playPauseIcon');
+    if (!clockRunning || isPaused) {
+        iconSpan.innerHTML = '<svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+    } else {
+        iconSpan.innerHTML = '<svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg>';
+    }
+}
+function syncClockTick() {
+    if (clockSyncTimeout) clearTimeout(clockSyncTimeout);
+    let ms = 1000 - (new Date()).getMilliseconds();
+    clockSyncTimeout = setTimeout(() => {
+        timerTick();
+        timer = setInterval(timerTick, 1000);
+    }, ms);
+}
+function timerTick() {
+    if (!isPaused && clockRunning) {
+        if (timeLeft > 0) {
+            timeLeft--;
+            updateClockDisplay(timeLeft);
+        } else {
+            const rows = document.querySelectorAll('#levelsBody tr');
+            currentLevelIndex++;
+            if (rows[currentLevelIndex]) {
+                const nextInputs = rows[currentLevelIndex].querySelectorAll('input');
+                timeLeft = parseInt(nextInputs[3].value) * 60;
+                updateCurrentLevelDisplay();
+                updateClockDisplay(timeLeft);
+            } else {
+                clockRunning = false;
+                isPaused = true;
+                clearInterval(timer);
+                updateClockDisplay(0);
+                setPlayPauseIcon();
+                return;
+            }
+        }
+    }
+}
+function resetTimer() {
+    clearInterval(timer);
+    if (clockSyncTimeout) clearTimeout(clockSyncTimeout);
+    timeLeft = 0;
+    currentLevelIndex = 0;
+    clockRunning = false;
+    isPaused = true;
+    updateClockDisplay(0);
+    updateCurrentLevelDisplay();
+    setPlayPauseIcon();
+    updateClockColor(timeLeft);
+}
+function updateCurrentLevelDisplay() {
+    const rows = document.querySelectorAll('#levelsBody tr');
+    const currentLevelDiv = document.getElementById('currentLevel');
+    const nextLevelDiv = document.getElementById('nextLevel');
+    if (rows.length === 0) {
+        currentLevelDiv.innerHTML = '<strong>Niveau : -</strong>';
+        nextLevelDiv.textContent = 'Prochain niveau : --';
+        return;
+    }
+    const row = rows[currentLevelIndex] || rows[0];
+    const inputs = row.querySelectorAll('input');
+    currentLevelDiv.innerHTML =
+        `<strong>Niveau ${currentLevelIndex + 1} : ${inputs[0].value} - ${inputs[1].value} / ${inputs[2].value}</strong>`;
+    if (rows[currentLevelIndex + 1]) {
+        const nextInputs = rows[currentLevelIndex + 1].querySelectorAll('input');
+        nextLevelDiv.textContent =
+            `Prochain niveau : ${nextInputs[0].value} - ${nextInputs[1].value} / ${nextInputs[2].value}`;
+    } else {
+        nextLevelDiv.textContent = 'Prochain niveau : --';
+    }
+}
+function updateCurrentTimeSync() {
+    const now = new Date();
+    document.getElementById('currentTime').textContent =
+        `Heure locale : ${now.toLocaleTimeString('fr-FR')}`;
+    const ms = 1000 - now.getMilliseconds();
+    setTimeout(updateCurrentTimeSync, ms);
+}
+updateCurrentTimeSync();
+
+window.onload = function() {
+    clearPlayersParam();
+    addPlayerParamRow("Alice");
+    addPlayerParamRow("Bob");
+    syncPlayersToResults();
+
+    clearLevels();
+    addLevelRow(1,2,0,30);
+    addLevelRow(2,4,0,30);
+    addLevelRow(4,8,0,30);
+    addLevelRow(5,10,0,30);
+    addLevelRow(10,20,0,30);
+    updateCurrentLevelDisplay();
+    resetAll();
+    setPlayPauseIcon();
+
+    document.getElementById('colorDefaultInput').value = "#933557";
+    addColorSettingRow('30:00', '#933557');
+    addColorSettingRow('10:00', '#FFA500');
+    addColorSettingRow('05:00', '#FF0000');
+    updateColorSettings();
+    updateClockColor(timeLeft);
+};
+
+document.addEventListener('input', function(e) {
+    if(e.target.classList.contains('time-input')) {
+        const value = e.target.value;
+        if(!/^[0-9]{0,2}:[0-5]?[0-9]?$/.test(value)) {
+            e.target.setCustomValidity('Format invalide (MM:SS)');
+        } else {
+            e.target.setCustomValidity('');
+        }
+        updateColorSettings();
+        updateClockColor(timeLeft);
+    }
+    if(e.target.closest('#playersParamBody')) {
+        syncPlayersToResults();
+    }
+});
+document.addEventListener('change', function(e) {
+    if(e.target.type === 'color') {
+        updateColorSettings();
+        updateClockColor(timeLeft);
+    }
+});
+
+// === Résultats Poker ===
+function getBustOptions(selected, playerCount) {
+    let options = '<option value="">--</option>';
+    for (let i = 1; i < playerCount; i++) {
+        options += `<option value="${i}" ${selected == i ? 'selected' : ''}>${i}</option>`;
+    }
+    return options;
+}
+function updateBustRankOptions() {
+    const rows = document.querySelectorAll('#playerRows tr');
+    const playerCount = rows.length;
+    rows.forEach(row => {
+        const select = row.querySelector('select');
+        const selected = select.value;
+        select.innerHTML = getBustOptions(selected, playerCount);
+    });
+}
+function getPlayers() {
+    const rows = document.querySelectorAll('#playerRows tr');
+    return Array.from(rows).map(row => {
+        const cells = row.querySelectorAll('input,select');
+        return {
+            name: row.querySelector('td').textContent.trim(),
+            SD: parseFloat(cells[0].value) || 0,
+            R: parseFloat(cells[1].value) || 0,
+            SA: parseFloat(cells[2].value) || 0,
+            rankBust: cells[3].value || ''
+        };
+    });
+}
+function updateChipsAndWarning() {
+    const players = getPlayers();
+    const totalSD = players.reduce((sum, p) => sum + p.SD, 0);
+    const totalR = players.reduce((sum, p) => sum + p.R, 0);
+    const totalSA = players.reduce((sum, p) => sum + p.SA, 0);
+    const totalChips = totalSD + totalR;
+    document.getElementById('chipsTotal').textContent = `Total chips en jeu : ${totalChips}`;
+    const warning = document.getElementById('warningMsg');
+    if (totalChips !== totalSA) {
+        const diff = totalSA - totalChips;
+        warning.textContent = `⚠️ Attention : la somme des stacks d'arrivée (${totalSA}) diffère de la somme des mises (${totalChips}) (${diff > 0 ? '+' : ''}${diff})`;
+    } else {
+        warning.textContent = '';
+    }
+}
+function calculate() {
+    const players = getPlayers();
+    if (players.length < 2) {
+        alert("Il faut au moins deux joueurs !");
+        return;
+    }
+    const totalSD = players.reduce((sum, p) => sum + p.SD, 0);
+    const totalR = players.reduce((sum, p) => sum + p.R, 0);
+    const totalChipsSoiree = totalSD + totalR;
+
+    const results = players.map(player => {
+        const differentiel = player.SA - (player.SD + player.R);
+        const percentChips = player.SA / totalChipsSoiree;
+        const percentRecave = player.R > 0 ? 0.5 : 0;
+        const malusRecave = player.R > 0 ? -250 * percentRecave : 0;
+        // Correction pénalité bust rank : plus gros malus pour le premier éliminé
+        const malusBust = player.rankBust > 0 ? -100 * (players.length - player.rankBust + 1) / players.length : 0;
+        const bonusNoRecave = player.R > 0 ? 0 : 250;
+        const score = differentiel + (percentChips * 1000) + malusRecave + malusBust + bonusNoRecave;
+        return { ...player, score };
+    });
+
+    results.sort((a, b) => b.score - a.score);
+
+    const tbody = document.querySelector('#resultsTable tbody');
+    tbody.innerHTML = results.map((p, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${p.name}</td>
+            <td>${p.score.toFixed(1)}</td>
+        </tr>
+    `).join('');
+    document.getElementById('resultsSection').style.display = '';
+    updateChipsAndWarning();
+}
+function resetAll() {
+    syncPlayersToResults();
+    document.getElementById('resultsSection').style.display = 'none';
+    updateChipsAndWarning();
+}
+function exportCSV() {
+    const players = getPlayers();
+    if (players.length === 0) {
+        alert("Aucun joueur à exporter !");
+        return;
+    }
+    const headers = ['Nom', 'SD', 'R', 'SA', 'Rank Bust'];
+    const csvRows = [headers.join(',')];
+    players.forEach(p => {
+        const row = [
+            p.name.includes(',') ? `"${p.name}"` : p.name,
+            p.SD,
+            p.R,
+            p.SA,
+            p.rankBust
+        ];
+        csvRows.push(row.join(','));
+    });
+    const csvContent = csvRows.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "poker_resultats.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
