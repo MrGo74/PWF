@@ -1,128 +1,266 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8" />
-    <title>Calculateur Poker Pro</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet" />
-    <style>
-        #clockDisplay {
-            font-family: 'Roboto Mono', 'Courier New', Courier, monospace;
-            font-size: 6em;
-            letter-spacing: 0.08em;
-            background: transparent;
-            border-radius: 16px;
-            padding: 0.25em 0.3em;
-            box-shadow: none;
-            margin: 20px 0 10px 0;
-            display: inline-block;
-            transition: color 0.3s ease;
-        }
-        .level-info { font-size: 1.2em; margin-bottom: 0.5em; }
-        .level-info strong { font-weight: bold; }
-        .next-level-info { font-size: 1.1em; color: #555; margin-bottom: 1.2em; }
-        .tab-content { display: none; }
-        .tab-content.is-active { display: block; }
-        .clock-box-relative { position: relative; }
-        .clock-controls-group {
-            position: absolute; top: 15px; left: 15px; z-index: 10;
-            display: flex; gap: 8px;
-        }
-        .clock-icon-btn {
-            background: none; border: none; border-radius: 50%;
-            width: 2.3em; height: 2.3em; display: flex; align-items: center; justify-content: center;
-            font-size: 1.7em; color: #3273dc; transition: background 0.2s, color 0.2s; cursor: pointer;
-        }
-        .clock-icon-btn:hover { background: #f3e4e7; color: #933557; }
-        .clock-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        @media (max-width: 768px) {
-            #clockDisplay { font-size: 3em; }
-            .clock-controls-group { top: 5px; left: 5px; }
-            .clock-icon-btn { width: 1.7em; height: 1.7em; font-size: 1.1em; }
-        }
-        .table-input input, .table-input select { width: 100%; }
-        .is-pointer { cursor: pointer; }
-        .mt-2 { margin-top: 1rem; }
-        .mb-2 { margin-bottom: 1rem; }
-        .chips-total { font-weight: bold; margin-left: 2rem; }
-        .warning-msg { color: #ff8800; font-size: 0.95em; margin-top: 0.5em; }
-        .color-default-row td { font-weight: bold; background: #f6f6f6; border-bottom: 1px solid #ddd; }
-        .param-level-num { width: 3em; text-align: center; font-weight: bold; background: #f9f9f9; }
-        .param-actions { margin-bottom: 1em; }
-        .param-global-actions { margin-bottom: 2em; }
-    </style>
+<meta charset="UTF-8" />
+<title>Calculateur Poker Pro avec Leaderboard triable</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&display=swap" rel="stylesheet" />
+<style>
+    #clockDisplay {
+        font-family: 'Roboto Mono', 'Courier New', Courier, monospace;
+        font-size: 6em;
+        letter-spacing: 0.08em;
+        background: transparent;
+        border-radius: 16px;
+        padding: 0.25em 0.3em;
+        box-shadow: none;
+        margin: 20px 0 10px 0;
+        display: inline-block;
+        transition: color 0.3s ease;
+    }
+    .level-info { font-size: 1.2em; margin-bottom: 0.5em; }
+    .level-info strong { font-weight: bold; }
+    .next-level-info { font-size: 1.1em; color: #555; margin-bottom: 1.2em; }
+    .tab-content { display: none; }
+    .tab-content.is-active { display: block; }
+    .clock-box-relative { position: relative; }
+    .clock-controls-group {
+        position: absolute; top: 15px; left: 15px; z-index: 10;
+        display: flex; gap: 8px;
+    }
+    .clock-icon-btn {
+        background: none; border: none; border-radius: 50%;
+        width: 2.3em; height: 2.3em; display: flex; align-items: center; justify-content: center;
+        font-size: 1.7em; color: #3273dc; transition: background 0.2s, color 0.2s; cursor: pointer;
+    }
+    .clock-icon-btn:hover { background: #f3e4e7; color: #933557; }
+    .clock-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    @media (max-width: 768px) {
+        #clockDisplay { font-size: 3em; }
+        .clock-controls-group { top: 5px; left: 5px; }
+        .clock-icon-btn { width: 1.7em; height: 1.7em; font-size: 1.1em; }
+    }
+    .table-input input, .table-input select { width: 100%; }
+    .is-pointer { cursor: pointer; }
+    .mt-2 { margin-top: 1rem; }
+    .mb-2 { margin-bottom: 1rem; }
+    .chips-total { font-weight: bold; margin-left: 2rem; }
+    .warning-msg { color: #ff8800; font-size: 0.95em; margin-top: 0.5em; }
+    .color-default-row td { font-weight: bold; background: #f6f6f6; border-bottom: 1px solid #ddd; }
+    .param-level-num { width: 3em; text-align: center; font-weight: bold; background: #f9f9f9; }
+    .param-actions { margin-bottom: 1em; }
+    .param-global-actions { margin-bottom: 2em; }
+    .leaderboard-table th, .leaderboard-table td { text-align: center; }
+    .leaderboard-table th { cursor:pointer; user-select:none; }
+    .leaderboard-table tbody tr:hover { background-color: #f0f0f0; }
+    .import-file-input { display: none; }
+    #tournamentSelector { width: 100%; margin-bottom: 1rem; }
+    .sort-indicator { font-size: 0.8em; margin-left: 0.2em; }
+</style>
+<script>
+function showTab(tabName, evt) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('is-active'));
+    document.querySelectorAll('.tabs li').forEach(li => li.classList.remove('is-active'));
+    document.getElementById(tabName + 'Tab').classList.add('is-active');
+    evt.currentTarget.classList.add('is-active');
+}
+</script>
 </head>
 <body>
 <section class="section">
-    <div class="container">
-        <div class="tabs is-boxed">
-            <ul>
-                <li class="is-active" onclick="showTab('clock', event)"><a>Horloge</a></li>
-                <li onclick="showTab('results', event)"><a>Résultats</a></li>
-                <li onclick="showTab('params', event)"><a>Paramètres</a></li>
-            </ul>
-        </div>
-
-        <!-- Onglet Horloge -->
-        <div id="clockTab" class="tab-content is-active">
-            <div class="columns">
-                <div class="column is-12">
-                    <div class="box has-text-centered clock-box-relative">
-                        <div class="clock-controls-group">
-                            <button id="playPauseBtn" class="clock-icon-btn" onclick="togglePlayPause()" title="Play/Pause">
-                                <span id="playPauseIcon">
-                                    <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-                                </span>
-                            </button>
-                            <button class="clock-icon-btn" onclick="resetTimer()" title="Réinitialiser">
-                                <span>
-                                    <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6a6.006 6.006 0 0 1-5.65-4H4.07c.5 4.01 3.92 7 7.93 7 4.42 0 8-3.58 8-8s-3.58-8-8-8z" fill="currentColor"/></svg>
-                                </span>
-                            </button>
-                        </div>
-                        <div id="clockDisplay">00:00:00</div>
-                        <div class="level-info mb-1" id="currentLevel"><strong>Niveau : -</strong></div>
-                        <div class="next-level-info" id="nextLevel">Prochain niveau : --</div>
-                        <div class="level-info mb-2">
-                            <span id="currentTime"></span>
-                        </div>
+<div class="container">
+    <div class="tabs is-boxed">
+        <ul>
+            <li class="is-active" onclick="showTab('clock', event)"><a>Horloge</a></li>
+            <li onclick="showTab('results', event)"><a>Résultats</a></li>
+            <li onclick="showTab('params', event)"><a>Paramètres</a></li>
+            <li onclick="showTab('leaderboard', event)"><a>Leaderboard</a></li>
+        </ul>
+    </div>
+    <!-- Onglet Horloge -->
+    <div id="clockTab" class="tab-content is-active">
+        <div class="columns">
+            <div class="column is-12">
+                <div class="box has-text-centered clock-box-relative">
+                    <div class="clock-controls-group">
+                        <button id="playPauseBtn" class="clock-icon-btn" onclick="togglePlayPause()" title="Play/Pause">
+                            <span id="playPauseIcon">
+                                <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+                            </span>
+                        </button>
+                        <button class="clock-icon-btn" onclick="resetTimer()" title="Réinitialiser">
+                            <span>
+                                <svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6a6.006 6.006 0 0 1-5.65-4H4.07c.5 4.01 3.92 7 7.93 7 4.42 0 8-3.58 8-8s-3.58-8-8-8z" fill="currentColor"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                    <div id="clockDisplay">00:00:00</div>
+                    <div class="level-info mb-1" id="currentLevel"><strong>Niveau : -</strong></div>
+                    <div class="next-level-info" id="nextLevel">Prochain niveau : --</div>
+                    <div class="level-info mb-2">
+                        <span id="currentTime"></span>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Onglet Résultats -->
-        <div id="resultsTab" class="tab-content">
-            <div class="box">
-                <table class="table is-fullwidth is-striped table-input" id="inputTable">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Stack Départ (SD)</th>
-                            <th>Recave (R)</th>
-                            <th>Stack Arrivée (SA)</th>
-                            <th>Bust Rank</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="playerRows"></tbody>
-                </table>
-                <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
-                    <div class="buttons">
-                        <button class="button is-success" onclick="calculate()">Calculer</button>
-                        <button class="button is-warning" onclick="exportCSV()">Exporter CSV</button>
-                        <button class="button is-danger" onclick="resetAll()">Reset</button>
-                    </div>
-                    <div class="chips-total" id="chipsTotal"></div>
-                </div>
-                <div id="warningMsg" class="warning-msg"></div>
+    </div>
+    <!-- Onglet Résultats -->
+    <div id="resultsTab" class="tab-content">
+        <div class="box">
+            <h3 class="title is-5" id="resultTournamentName" style="font-weight:bold; margin-bottom:1rem;">-</h3>
+            <div class="buttons is-small">
+                <button class="button is-success is-small" onclick="calculate()">Calculer</button>
+                <button class="button is-warning is-small" onclick="exportResultsJSON()">Exporter</button>
+                <button class="button is-info is-small" onclick="shufflePlayers()">Générer positions</button>
             </div>
-            <div id="resultsSection" class="box mt-2" style="display:none;">
-                <h2 class="subtitle">Résultats</h2>
-                <table class="table is-fullwidth is-striped" id="resultsTable">
+            <table class="table is-fullwidth is-striped table-input" id="inputTable">
+                <thead>
+                    <tr>
+                        <th style="width:3em">#</th>
+                        <th>Nom</th>
+                        <th>Stack Départ (SD)</th>
+                        <th>Recave (R)</th>
+                        <th>Stack Arrivée (SA)</th>
+                        <th>Bust Rank</th>
+                    </tr>
+                </thead>
+                <tbody id="playerRows"></tbody>
+            </table>
+            <div class="is-flex is-align-items-center is-justify-content-space-between mb-2">
+                <div class="chips-total" id="chipsTotal"></div>
+            </div>
+            <div id="warningMsg" class="warning-msg"></div>
+        </div>
+        <div id="resultsSection" class="box mt-2" style="display:none;">
+            <h2 class="subtitle">Classement final</h2>
+            <table class="table is-fullwidth is-striped" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Joueur</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Onglet Paramètres -->
+    <div id="paramsTab" class="tab-content">
+        <div class="box">
+            <div class="buttons param-global-actions">
+                <button class="button is-small is-info" onclick="exportAllParams()">💾 Exporter tous les paramètres</button>
+                <label class="button is-small is-warning" style="margin-bottom:0;">
+                    📥 Importer tous les paramètres
+                    <input type="file" accept=".json,application/json" style="display:none" onchange="importAllParams(event)">
+                </label>
+            </div>
+            <div class="field">
+                <label class="label">Nom du tournoi</label>
+                <div class="control">
+                    <input id="tournamentNameInput" class="input" type="text" />
+                </div>
+            </div>
+            <h2 class="subtitle">Joueurs</h2>
+            <table class="table is-fullwidth mb-6" id="playersTable">
+                <thead>
+                    <tr>
+                        <th style="width:3em">#</th>
+                        <th>Nom du joueur</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="playersParamBody"></tbody>
+            </table>
+            <div class="buttons param-actions mb-4">
+                <button class="button is-small" onclick="addPlayerParamRow()">+ Ajouter joueur</button>
+                <button class="button is-small is-danger" onclick="clearPlayersParam()">× Tout supprimer</button>
+                <button class="button is-small is-info" onclick="savePlayersParam()">💾 Sauvegarder</button>
+                <button class="button is-small is-warning" onclick="loadPlayersParam()">📥 Charger</button>
+            </div>
+            <h2 class="subtitle">Paramètres des niveaux</h2>
+            <table class="table is-fullwidth mb-6" id="levelsTable">
+                <thead>
+                    <tr>
+                        <th style="width:3em">Niveau</th>
+                        <th>SB</th>
+                        <th>BB</th>
+                        <th>Ante</th>
+                        <th>Durée (min)</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="levelsBody"></tbody>
+            </table>
+            <div class="buttons param-actions mb-4">
+                <button class="button is-small" onclick="addLevelRow()">+ Ajouter niveau</button>
+                <button class="button is-small is-danger" onclick="clearLevels()">× Tout supprimer</button>
+                <button class="button is-small is-info" onclick="saveLevelsParam()">💾 Sauvegarder</button>
+                <button class="button is-small is-warning" onclick="loadLevelsParam()">📥 Charger</button>
+            </div>
+            <h2 class="subtitle">Couleurs de l'horloge</h2>
+            <table class="table is-fullwidth" id="colorSettingsTable">
+                <thead>
+                    <tr>
+                        <th>Temps maximum (MM:SS)</th>
+                        <th>Couleur</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="colorSettingsBody">
+                    <tr class="color-default-row">
+                        <td>Couleur par défaut</td>
+                        <td>
+                            <input id="colorDefaultInput" class="input" type="color" value="#933557" onchange="updateColorSettings();updateClockColor(timeLeft);">
+                        </td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="buttons param-actions">
+                <button class="button is-small" onclick="addColorSettingRow()">+ Ajouter seuil</button>
+                <button class="button is-small is-info" onclick="saveColorsParam()">💾 Sauvegarder</button>
+                <button class="button is-small is-warning" onclick="loadColorsParam()">📥 Charger</button>
+            </div>
+        </div>
+    </div>
+    <!-- Onglet Leaderboard -->
+    <div id="leaderboardTab" class="tab-content">
+        <div class="box">
+            <h2 class="subtitle">Leaderboard général</h2>
+            <div class="buttons param-actions" style="margin-bottom:1em;">
+                <button class="button is-small is-info" onclick="exportLeaderboard()">💾 Exporter</button>
+                <button class="button is-small is-warning" onclick="importLeaderboard()">📥 Importer</button>
+                <label class="button is-small is-info" style="margin-bottom:0;">
+                    ➕ Importer un tournoi
+                    <input type="file" accept=".json,application/json" style="display:none" onchange="importSingleTournament(event)">
+                </label>
+            </div>
+            <table class="table is-fullwidth is-striped leaderboard-table" id="leaderboardTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortLeaderboard(0)">#<span class="sort-indicator" id="sort-0"></span></th>
+                        <th onclick="sortLeaderboard(1)">Joueur<span class="sort-indicator" id="sort-1"></span></th>
+                        <th onclick="sortLeaderboard(2)">Tot.<span class="sort-indicator" id="sort-2"></span></th>
+                        <th onclick="sortLeaderboard(3)">Nb Tourn.<span class="sort-indicator" id="sort-3"></span></th>
+                        <th onclick="sortLeaderboard(4)">Moy.<span class="sort-indicator" id="sort-4"></span></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="field">
+                <div class="control">
+                    <select class="input" id="tournamentSelector" onchange="loadTournamentResults()">
+                        <option value="">-- Sélectionner un tournoi --</option>
+                    </select>
+                </div>
+            </div>
+            <div id="tournamentResultsSection" style="margin-top:2em;display:none;">
+                <h2 class="subtitle">Résultats du tournoi sélectionné</h2>
+                <table class="table is-fullwidth is-striped" id="tournamentResultsTable">
                     <thead>
                         <tr>
-                            <th>Position</th>
+                            <th>#</th>
                             <th>Joueur</th>
                             <th>Score</th>
                         </tr>
@@ -131,101 +269,71 @@
                 </table>
             </div>
         </div>
-
-        <!-- Onglet Paramètres -->
-        <div id="paramsTab" class="tab-content">
-            <div class="box">
-
-                <!-- Actions globales import/export -->
-                <div class="buttons param-global-actions">
-                    <button class="button is-info" onclick="exportAllParams()">💾 Exporter tous les paramètres</button>
-                    <label class="button is-warning" style="margin-bottom:0;">
-                        📥 Importer tous les paramètres
-                        <input type="file" accept=".json,application/json" style="display:none" onchange="importAllParams(event)">
-                    </label>
-                </div>
-
-                <!-- Section Joueurs -->
-                <h2 class="subtitle">Joueurs</h2>
-                <table class="table is-fullwidth mb-6" id="playersTable">
-                    <thead>
-                        <tr>
-                            <th style="width:3em">#</th>
-                            <th>Nom du joueur</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="playersParamBody"></tbody>
-                </table>
-                <div class="buttons param-actions mb-4">
-                    <button class="button is-small" onclick="addPlayerParamRow()">+ Ajouter joueur</button>
-                    <button class="button is-small is-danger" onclick="clearPlayersParam()">× Tout supprimer</button>
-                    <button class="button is-small is-info" onclick="savePlayersParam()">💾 Sauvegarder</button>
-                    <button class="button is-small is-warning" onclick="loadPlayersParam()">📥 Charger</button>
-                </div>
-
-                <!-- Section Niveaux -->
-                <h2 class="subtitle">Paramètres des niveaux</h2>
-                <table class="table is-fullwidth mb-6" id="levelsTable">
-                    <thead>
-                        <tr>
-                            <th style="width:3em">Niveau</th>
-                            <th>SB</th>
-                            <th>BB</th>
-                            <th>Ante</th>
-                            <th>Durée (min)</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="levelsBody"></tbody>
-                </table>
-                <div class="buttons param-actions mb-4">
-                    <button class="button is-small" onclick="addLevelRow()">+ Ajouter niveau</button>
-                    <button class="button is-small is-danger" onclick="clearLevels()">× Tout supprimer</button>
-                    <button class="button is-small is-info" onclick="saveLevelsParam()">💾 Sauvegarder</button>
-                    <button class="button is-small is-warning" onclick="loadLevelsParam()">📥 Charger</button>
-                </div>
-
-                <!-- Section Couleurs de l'horloge -->
-                <h2 class="subtitle">Couleurs de l'horloge</h2>
-                <table class="table is-fullwidth" id="colorSettingsTable">
-                    <thead>
-                        <tr>
-                            <th>Temps maximum (MM:SS)</th>
-                            <th>Couleur</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="colorSettingsBody">
-                        <tr class="color-default-row">
-                            <td>Couleur par défaut</td>
-                            <td>
-                                <input id="colorDefaultInput" class="input" type="color" value="#933557" onchange="updateColorSettings();updateClockColor(timeLeft);">
-                            </td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="buttons param-actions">
-                    <button class="button is-small" onclick="addColorSettingRow()">+ Ajouter seuil</button>
-                    <button class="button is-small is-info" onclick="saveColorsParam()">💾 Sauvegarder</button>
-                    <button class="button is-small is-warning" onclick="loadColorsParam()">📥 Charger</button>
-                </div>
-            </div>
-        </div>
     </div>
+</div>
 </section>
-
 <script>
-// === Gestion des onglets ===
-function showTab(tabName, evt) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('is-active'));
-    document.querySelectorAll('.tabs li').forEach(li => li.classList.remove('is-active'));
-    document.getElementById(tabName + 'Tab').classList.add('is-active');
-    evt.currentTarget.classList.add('is-active');
-}
+let timer = null, currentLevelIndex = 0, timeLeft = 0, isPaused = true, clockRunning = false, clockSyncTimeout = null;
+let colorSettings = [];
+let colorDefault = "#933557";
+let leaderboardData = {};
+let allTournaments = [];
+let leaderboardSortCol = 2; // par défaut tri sur "Tot."
+let leaderboardSortAsc = false; // décroissant
 
-// === Gestion des joueurs (PARAMÈTRES) ===
+function updateLeaderboardDisplay() {
+    const tbody = document.querySelector('#leaderboardTable tbody');
+    const players = Object.entries(leaderboardData).map(([name, data]) => ({
+        name,
+        totalScore: data.totalScore,
+        tournamentsCount: data.tournamentsCount,
+        averageScore: data.totalScore / data.tournamentsCount
+    }));
+    let col = leaderboardSortCol, asc = leaderboardSortAsc;
+    let sorted = players.slice();
+    sorted.sort((a, b) => {
+        let vA, vB;
+        switch(col) {
+            case 0: vA = a; vB = b; break;
+            case 1: vA = a.name.toLowerCase(); vB = b.name.toLowerCase(); break;
+            case 2: vA = a.totalScore; vB = b.totalScore; break;
+            case 3: vA = a.tournamentsCount; vB = b.tournamentsCount; break;
+            case 4: vA = a.averageScore; vB = b.averageScore; break;
+        }
+        if (col === 1) {
+            if (vA < vB) return asc ? -1 : 1;
+            if (vA > vB) return asc ? 1 : -1;
+            return 0;
+        } else {
+            return asc ? vA - vB : vB - vA;
+        }
+    });
+    tbody.innerHTML = sorted.map((p, i) => `
+        <tr>
+            <td>${i+1}</td>
+            <td>${p.name}</td>
+            <td>${p.totalScore.toFixed(1)}</td>
+            <td>${p.tournamentsCount}</td>
+            <td>${p.averageScore.toFixed(1)}</td>
+        </tr>
+    `).join('');
+    for(let i=0;i<5;i++) {
+        document.getElementById('sort-'+i).textContent = '';
+    }
+    document.getElementById('sort-'+col).textContent = asc ? '▲' : '▼';
+}
+function sortLeaderboard(col) {
+    if (leaderboardSortCol === col) leaderboardSortAsc = !leaderboardSortAsc;
+    else {
+        leaderboardSortCol = col;
+        leaderboardSortAsc = (col === 1);
+    }
+    updateLeaderboardDisplay();
+}
+function updateTournamentNameDisplay() {
+    const tournamentName = document.getElementById('tournamentNameInput').value.trim() || 'Tournoi';
+    document.getElementById('resultTournamentName').textContent = tournamentName;
+}
 function addPlayerParamRow(name = '') {
     const tbody = document.getElementById('playersParamBody');
     const tr = document.createElement('tr');
@@ -258,8 +366,6 @@ function updatePlayerParamNumbers() {
         if(numCell) numCell.textContent = idx + 1;
     });
 }
-
-// === Sauvegarde/Chargement Joueurs ===
 function savePlayersParam() {
     const players = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
         row.querySelector('input').value.trim()
@@ -274,14 +380,11 @@ function loadPlayersParam() {
     JSON.parse(data).forEach(name => addPlayerParamRow(name));
     syncPlayersToResults();
 }
-
-// === Synchronisation joueurs Paramètres -> Résultats ===
 function syncPlayersToResults() {
     const playerNames = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
         row.querySelector('input').value.trim() || `Joueur ${Array.from(row.parentNode.children).indexOf(row)+1}`
     );
     const tbody = document.getElementById('playerRows');
-    // Sauvegarde des autres champs si possible
     let oldData = [];
     Array.from(tbody.children).forEach((row, idx) => {
         oldData.push({
@@ -296,6 +399,7 @@ function syncPlayersToResults() {
         const old = oldData[idx] || {};
         const tr = document.createElement('tr');
         tr.innerHTML = `
+            <td class="player-pos"></td>
             <td>${name}</td>
             <td><input class="input" type="number" min="0" value="${old.SD||400}" placeholder="Stack Départ" oninput="updateChipsAndWarning()"></td>
             <td><input class="input" type="number" min="0" value="${old.R||''}" placeholder="Recave" oninput="updateChipsAndWarning()"></td>
@@ -307,15 +411,20 @@ function syncPlayersToResults() {
                     </select>
                 </div>
             </td>
-            <td></td>
         `;
         tbody.appendChild(tr);
     });
+    updatePlayerPositions();
     updateBustRankOptions();
     updateChipsAndWarning();
 }
-
-// === Gestion des niveaux ===
+function updatePlayerPositions() {
+    const rows = document.querySelectorAll('#playerRows tr');
+    rows.forEach((row, idx) => {
+        const posCell = row.querySelector('.player-pos');
+        if(posCell) posCell.textContent = idx + 1;
+    });
+}
 function addLevelRow(sb = '', bb = '', ante = '', duration = '') {
     const tbody = document.getElementById('levelsBody');
     const tr = document.createElement('tr');
@@ -365,8 +474,6 @@ function clearLevels() {
     document.getElementById('levelsBody').innerHTML = '';
     updateLevelNumbers();
 }
-
-// === Sauvegarde/Chargement Niveaux ===
 function saveLevelsParam() {
     const levels = Array.from(document.querySelectorAll('#levelsBody tr')).map(row => {
         const inputs = row.querySelectorAll('input');
@@ -387,10 +494,6 @@ function loadLevelsParam() {
     JSON.parse(data).forEach(lvl => addLevelRow(lvl.sb, lvl.bb, lvl.ante, lvl.duration));
     updateLevelNumbers();
 }
-
-// === Couleurs dynamiques de l'horloge ===
-let colorSettings = [];
-let colorDefault = "#933557";
 function addColorSettingRow(time = '', color = '#933557') {
     const tbody = document.getElementById('colorSettingsBody');
     const tr = document.createElement('tr');
@@ -435,17 +538,6 @@ function updateColorSettings() {
     colorSettings.sort((a, b) => b.threshold - a.threshold);
     updateClockColor(timeLeft);
 }
-function updateClockColor(seconds) {
-    let selectedColor = colorDefault;
-    for(let i = 0; i < colorSettings.length; i++) {
-        if(seconds <= colorSettings[i].threshold) {
-            selectedColor = colorSettings[i].color;
-        }
-    }
-    document.getElementById('clockDisplay').style.color = selectedColor;
-}
-
-// === Sauvegarde/Chargement Couleurs ===
 function saveColorsParam() {
     let colorDefaultInput = document.getElementById('colorDefaultInput');
     let colorDefault = colorDefaultInput ? colorDefaultInput.value : "#933557";
@@ -475,81 +567,15 @@ function loadColorsParam() {
     updateColorSettings();
     updateClockColor(timeLeft);
 }
-
-// === Export/Import global paramètres ===
-function exportAllParams() {
-    // Récupérer joueurs
-    const joueurs = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
-        row.querySelector('input').value.trim()
-    );
-    // Récupérer niveaux
-    const niveaux = Array.from(document.querySelectorAll('#levelsBody tr')).map(row => {
-        const inputs = row.querySelectorAll('input');
-        return {
-            sb: inputs[0].value,
-            bb: inputs[1].value,
-            ante: inputs[2].value,
-            duration: inputs[3].value
-        };
-    });
-    // Récupérer couleurs
-    let colorDefaultInput = document.getElementById('colorDefaultInput');
-    let colorDefault = colorDefaultInput ? colorDefaultInput.value : "#933557";
-    const couleurs = {
-        default: colorDefault,
-        steps: Array.from(document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)')).map(row => {
-            const timeInput = row.querySelector('.time-input');
-            const colorInput = row.querySelector('input[type="color"]');
-            return {
-                time: timeInput.value,
-                color: colorInput.value
-            };
-        })
-    };
-    const obj = { joueurs, niveaux, couleurs };
-    const blob = new Blob([JSON.stringify(obj, null, 2)], {type: "application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = "poker_parametres.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-function importAllParams(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const obj = JSON.parse(e.target.result);
-            // Joueurs
-            clearPlayersParam();
-            (obj.joueurs || []).forEach(name => addPlayerParamRow(name));
-            // Niveaux
-            clearLevels();
-            (obj.niveaux || []).forEach(lvl => addLevelRow(lvl.sb, lvl.bb, lvl.ante, lvl.duration));
-            updateLevelNumbers();
-            // Couleurs
-            document.getElementById('colorDefaultInput').value = (obj.couleurs && obj.couleurs.default) || "#933557";
-            document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)').forEach(row => row.remove());
-            if (obj.couleurs && obj.couleurs.steps) {
-                obj.couleurs.steps.forEach(step => addColorSettingRow(step.time, step.color));
-            }
-            updateColorSettings();
-            updateClockColor(timeLeft);
-            alert("Paramètres importés !");
-        } catch(e) {
-            alert("Erreur lors de l'import du fichier : " + e);
+function updateClockColor(seconds) {
+    let selectedColor = colorDefault;
+    for(let i = 0; i < colorSettings.length; i++) {
+        if(seconds <= colorSettings[i].threshold) {
+            selectedColor = colorSettings[i].color;
         }
-    };
-    reader.readAsText(file);
-    event.target.value = ""; // permet de réimporter le même fichier si besoin
+    }
+    document.getElementById('clockDisplay').style.color = selectedColor;
 }
-
-// === Horloge ===
-let timer = null, currentLevelIndex = 0, timeLeft = 0, isPaused = true, clockRunning = false, clockSyncTimeout = null;
 function updateClockDisplay(seconds) {
     seconds = Math.max(0, seconds);
     const hrs = Math.floor(seconds / 3600).toString().padStart(2, '0');
@@ -656,54 +682,27 @@ function updateCurrentTimeSync() {
     setTimeout(updateCurrentTimeSync, ms);
 }
 updateCurrentTimeSync();
-
-window.onload = function() {
-    clearPlayersParam();
-    addPlayerParamRow("Alice");
-    addPlayerParamRow("Bob");
-    syncPlayersToResults();
-
-    clearLevels();
-    addLevelRow(1,2,0,30);
-    addLevelRow(2,4,0,30);
-    addLevelRow(4,8,0,30);
-    addLevelRow(5,10,0,30);
-    addLevelRow(10,20,0,30);
-    updateCurrentLevelDisplay();
-    resetAll();
-    setPlayPauseIcon();
-
-    document.getElementById('colorDefaultInput').value = "#933557";
-    addColorSettingRow('30:00', '#933557');
-    addColorSettingRow('10:00', '#FFA500');
-    addColorSettingRow('05:00', '#FF0000');
-    updateColorSettings();
-    updateClockColor(timeLeft);
-};
-
-document.addEventListener('input', function(e) {
-    if(e.target.classList.contains('time-input')) {
-        const value = e.target.value;
-        if(!/^[0-9]{0,2}:[0-5]?[0-9]?$/.test(value)) {
-            e.target.setCustomValidity('Format invalide (MM:SS)');
-        } else {
-            e.target.setCustomValidity('');
-        }
-        updateColorSettings();
-        updateClockColor(timeLeft);
+function shufflePlayers() {
+    const tbody = document.getElementById('playerRows');
+    const rows = Array.from(tbody.children).map(row => ({
+        html: row.innerHTML,
+        values: Array.from(row.querySelectorAll('input,select')).map(el => el.value)
+    }));
+    for (let i = rows.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [rows[i], rows[j]] = [rows[j], rows[i]];
     }
-    if(e.target.closest('#playersParamBody')) {
-        syncPlayersToResults();
-    }
-});
-document.addEventListener('change', function(e) {
-    if(e.target.type === 'color') {
-        updateColorSettings();
-        updateClockColor(timeLeft);
-    }
-});
-
-// === Résultats Poker ===
+    tbody.innerHTML = '';
+    rows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = row.html;
+        Array.from(tr.querySelectorAll('input,select')).forEach((el, i) => el.value = row.values[i]);
+        tbody.appendChild(tr);
+    });
+    updatePlayerPositions();
+    updateBustRankOptions();
+    updateChipsAndWarning();
+}
 function getBustOptions(selected, playerCount) {
     let options = '<option value="">--</option>';
     for (let i = 1; i < playerCount; i++) {
@@ -722,10 +721,11 @@ function updateBustRankOptions() {
 }
 function getPlayers() {
     const rows = document.querySelectorAll('#playerRows tr');
-    return Array.from(rows).map(row => {
+    return Array.from(rows).map((row, idx) => {
         const cells = row.querySelectorAll('input,select');
         return {
-            name: row.querySelector('td').textContent.trim(),
+            pos: idx + 1,
+            name: row.querySelectorAll('td')[1].textContent.trim(),
             SD: parseFloat(cells[0].value) || 0,
             R: parseFloat(cells[1].value) || 0,
             SA: parseFloat(cells[2].value) || 0,
@@ -757,21 +757,17 @@ function calculate() {
     const totalSD = players.reduce((sum, p) => sum + p.SD, 0);
     const totalR = players.reduce((sum, p) => sum + p.R, 0);
     const totalChipsSoiree = totalSD + totalR;
-
     const results = players.map(player => {
         const differentiel = player.SA - (player.SD + player.R);
         const percentChips = player.SA / totalChipsSoiree;
         const percentRecave = player.R > 0 ? 0.5 : 0;
         const malusRecave = player.R > 0 ? -250 * percentRecave : 0;
-        // Correction pénalité bust rank : plus gros malus pour le premier éliminé
         const malusBust = player.rankBust > 0 ? -100 * (players.length - player.rankBust + 1) / players.length : 0;
         const bonusNoRecave = player.R > 0 ? 0 : 250;
         const score = differentiel + (percentChips * 1000) + malusRecave + malusBust + bonusNoRecave;
         return { ...player, score };
     });
-
     results.sort((a, b) => b.score - a.score);
-
     const tbody = document.querySelector('#resultsTable tbody');
     tbody.innerHTML = results.map((p, i) => `
         <tr>
@@ -782,41 +778,285 @@ function calculate() {
     `).join('');
     document.getElementById('resultsSection').style.display = '';
     updateChipsAndWarning();
+    updateTournamentNameDisplay();
+    const tournamentName = document.getElementById('tournamentNameInput').value.trim() || 'Tournoi';
+    const tournamentDate = new Date().toISOString();
+    allTournaments.push({
+        name: tournamentName,
+        date: tournamentDate,
+        results: results.map(r => ({name: r.name, score: r.score}))
+    });
+    updateLeaderboardWithTournament({tournamentName, tournamentDate, results});
+    updateTournamentSelector();
 }
-function resetAll() {
-    syncPlayersToResults();
-    document.getElementById('resultsSection').style.display = 'none';
-    updateChipsAndWarning();
-}
-function exportCSV() {
+function exportResultsJSON() {
     const players = getPlayers();
     if (players.length === 0) {
         alert("Aucun joueur à exporter !");
         return;
     }
-    const headers = ['Nom', 'SD', 'R', 'SA', 'Rank Bust'];
-    const csvRows = [headers.join(',')];
-    players.forEach(p => {
-        const row = [
-            p.name.includes(',') ? `"${p.name}"` : p.name,
-            p.SD,
-            p.R,
-            p.SA,
-            p.rankBust
-        ];
-        csvRows.push(row.join(','));
-    });
-    const csvContent = csvRows.join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const tournamentName = document.getElementById('tournamentNameInput').value.trim() || 'Tournoi';
+    const tournamentDate = new Date().toISOString();
+    const results = players.map(p => ({
+        name: p.name,
+        SD: p.SD,
+        R: p.R,
+        SA: p.SA,
+        rankBust: p.rankBust
+    }));
+    const data = {
+        tournamentName,
+        tournamentDate,
+        results
+    };
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], {type: "application/json"});
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "poker_resultats.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Résultat - ${tournamentName.replace(/[\\\/:*?"<>|]/g, '_')}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+function updateLeaderboardWithTournament(tournamentData) {
+    if(!tournamentData || !tournamentData.results) return;
+    tournamentData.results.forEach(p => {
+        if(!leaderboardData[p.name]) {
+            leaderboardData[p.name] = { totalScore: 0, tournamentsCount: 0 };
+        }
+        leaderboardData[p.name].totalScore += p.score;
+        leaderboardData[p.name].tournamentsCount++;
+    });
+    updateLeaderboardDisplay();
+}
+function updateTournamentSelector() {
+    const selector = document.getElementById('tournamentSelector');
+    selector.innerHTML = '<option value="">-- Sélectionner un tournoi --</option>';
+    allTournaments.forEach((t, i) => {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${t.name} (${new Date(t.date).toLocaleDateString('fr-FR')})`;
+        selector.appendChild(option);
+    });
+}
+function loadTournamentResults() {
+    const selector = document.getElementById('tournamentSelector');
+    const index = selector.value;
+    const section = document.getElementById('tournamentResultsSection');
+    if (index === "" || !allTournaments[index]) {
+        section.style.display = "none";
+        return;
+    }
+    const tournament = allTournaments[index];
+    const tbody = document.querySelector('#tournamentResultsTable tbody');
+    const sorted = (tournament.results || []).slice().sort((a,b)=>b.score-a.score);
+    tbody.innerHTML = sorted.map((p, i) => `
+        <tr>
+            <td>${i + 1}</td>
+            <td>${p.name}</td>
+            <td>${p.score.toFixed(1)}</td>
+        </tr>
+    `).join('');
+    section.style.display = "";
+}
+function exportLeaderboard() {
+    const data = { leaderboardData, allTournaments };
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "leaderboard.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function importLeaderboard() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = evt => {
+            try {
+                const data = JSON.parse(evt.target.result);
+                if(data.leaderboardData && data.allTournaments) {
+                    leaderboardData = data.leaderboardData;
+                    allTournaments = data.allTournaments;
+                    updateLeaderboardDisplay();
+                    updateTournamentSelector();
+                    alert("Leaderboard importé avec succès !");
+                } else {
+                    alert("Fichier JSON invalide pour leaderboard.");
+                }
+            } catch(err) {
+                alert("Erreur lors de l'import du leaderboard : " + err);
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+}
+function importSingleTournament(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if(data.tournamentName && data.tournamentDate && data.results) {
+                const playersCount = data.results.length;
+                const totalChipsSoiree = data.results.reduce((sum, p) => sum + (parseFloat(p.SD)||0) + (parseFloat(p.R)||0), 0);
+                const results = data.results.map(player => {
+                    const differentiel = (parseFloat(player.SA)||0) - ((parseFloat(player.SD)||0) + (parseFloat(player.R)||0));
+                    const percentChips = (parseFloat(player.SA)||0) / totalChipsSoiree;
+                    const percentRecave = (parseFloat(player.R)||0) > 0 ? 0.5 : 0;
+                    const malusRecave = (parseFloat(player.R)||0) > 0 ? -250 * percentRecave : 0;
+                    const malusBust = player.rankBust > 0 ? -100 * (playersCount - player.rankBust + 1) / playersCount : 0;
+                    const bonusNoRecave = (parseFloat(player.R)||0) > 0 ? 0 : 250;
+                    const score = differentiel + (percentChips * 1000) + malusRecave + malusBust + bonusNoRecave;
+                    return { name: player.name, score };
+                });
+                allTournaments.push({
+                    name: data.tournamentName,
+                    date: data.tournamentDate,
+                    results
+                });
+                results.forEach(p => {
+                    if(!leaderboardData[p.name]) leaderboardData[p.name] = { totalScore: 0, tournamentsCount: 0 };
+                    leaderboardData[p.name].totalScore += p.score;
+                    leaderboardData[p.name].tournamentsCount++;
+                });
+                updateLeaderboardDisplay();
+                updateTournamentSelector();
+                alert("Tournoi importé et ajouté au leaderboard !");
+            } else {
+                alert("Fichier tournoi JSON invalide.");
+            }
+        } catch(err) {
+            alert("Erreur lors de l'import du tournoi : " + err);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+}
+function exportAllParams() {
+    const joueurs = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
+        row.querySelector('input').value.trim()
+    );
+    const niveaux = Array.from(document.querySelectorAll('#levelsBody tr')).map(row => {
+        const inputs = row.querySelectorAll('input');
+        return {
+            sb: inputs[0].value,
+            bb: inputs[1].value,
+            ante: inputs[2].value,
+            duration: inputs[3].value
+        };
+    });
+    let colorDefaultInput = document.getElementById('colorDefaultInput');
+    let colorDefault = colorDefaultInput ? colorDefaultInput.value : "#933557";
+    const couleurs = {
+        default: colorDefault,
+        steps: Array.from(document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)')).map(row => {
+            const timeInput = row.querySelector('.time-input');
+            const colorInput = row.querySelector('input[type="color"]');
+            return {
+                time: timeInput.value,
+                color: colorInput.value
+            };
+        })
+    };
+    const nomTournoi = document.getElementById('tournamentNameInput').value.trim();
+    const obj = { joueurs, niveaux, couleurs, nomTournoi };
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "poker_parametres.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function importAllParams(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const obj = JSON.parse(e.target.result);
+            clearPlayersParam();
+            (obj.joueurs || []).forEach(name => addPlayerParamRow(name));
+            clearLevels();
+            (obj.niveaux || []).forEach(lvl => addLevelRow(lvl.sb, lvl.bb, lvl.ante, lvl.duration));
+            updateLevelNumbers();
+            document.getElementById('colorDefaultInput').value = (obj.couleurs && obj.couleurs.default) || "#933557";
+            document.querySelectorAll('#colorSettingsBody tr:not(.color-default-row)').forEach(row => row.remove());
+            if (obj.couleurs && obj.couleurs.steps) {
+                obj.couleurs.steps.forEach(step => addColorSettingRow(step.time, step.color));
+            }
+            updateColorSettings();
+            updateClockColor(timeLeft);
+            if(obj.nomTournoi) document.getElementById('tournamentNameInput').value = obj.nomTournoi;
+            updateTournamentNameDisplay();
+            alert("Paramètres importés !");
+        } catch(e) {
+            alert("Erreur lors de l'import du fichier : " + e);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+}
+window.onload = function() {
+    clearPlayersParam();
+    addPlayerParamRow("Alice");
+    addPlayerParamRow("Bob");
+    syncPlayersToResults();
+    clearLevels();
+    addLevelRow(1,2,0,30);
+    addLevelRow(2,4,0,30);
+    addLevelRow(4,8,0,30);
+    addLevelRow(5,10,0,30);
+    addLevelRow(10,20,0,30);
+    updateCurrentLevelDisplay();
+    setPlayPauseIcon();
+    document.getElementById('colorDefaultInput').value = "#933557";
+    addColorSettingRow('30:00', '#933557');
+    addColorSettingRow('10:00', '#FFA500');
+    addColorSettingRow('05:00', '#FF0000');
+    updateColorSettings();
+    updateClockColor(timeLeft);
+    const input = document.getElementById('tournamentNameInput');
+    if (!input.value.trim()) input.value = `Tournoi du ${new Date().toLocaleDateString('fr-FR')}`;
+    updateTournamentNameDisplay();
+    document.getElementById('tournamentNameInput').addEventListener('input', updateTournamentNameDisplay);
+};
+document.addEventListener('input', function(e) {
+    if(e.target.classList.contains('time-input')) {
+        const value = e.target.value;
+        if(!/^[0-9]{0,2}:[0-5]?[0-9]?$/.test(value)) {
+            e.target.setCustomValidity('Format invalide (MM:SS)');
+        } else {
+            e.target.setCustomValidity('');
+        }
+        updateColorSettings();
+        updateClockColor(timeLeft);
+    }
+    if(e.target.closest('#playersParamBody')) {
+        syncPlayersToResults();
+    }
+});
+document.addEventListener('change', function(e) {
+    if(e.target.type === 'color') {
+        updateColorSettings();
+        updateClockColor(timeLeft);
+    }
+});
 </script>
 </body>
 </html>
