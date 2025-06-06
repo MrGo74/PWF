@@ -1,0 +1,102 @@
+{
+  "joueurs": [
+    "Alexis",
+    "Aurélien",
+    "David",
+    "Rémy",
+    "Olivier",
+    "Sylvain",
+    "FX"
+  ],
+  "niveaux": [
+    {
+      "type": "niveau",
+      "sb": "1",
+      "bb": "2",
+      "ante": "0",
+      "duration": "30"
+    },
+    {
+      "type": "niveau",
+      "sb": "2",
+      "bb": "4",
+      "ante": "0",
+      "duration": "20"
+    },
+    {
+      "type": "pause",
+      "duration": "15"
+    },
+    {
+      "type": "niveau",
+      "sb": "5",
+      "bb": "10",
+      "ante": "0",
+      "duration": "20"
+    },
+    {
+      "type": "niveau",
+      "sb": "10",
+      "bb": "20",
+      "ante": "0",
+      "duration": "20"
+    },
+    {
+      "type": "niveau",
+      "sb": "15",
+      "bb": "30",
+      "ante": "0",
+      "duration": "20"
+    },
+    {
+      "type": "niveau",
+      "sb": "25",
+      "bb": "50",
+      "ante": "0",
+      "duration": "20"
+    },
+    {
+      "type": "niveau",
+      "sb": "30",
+      "bb": "60",
+      "ante": "0",
+      "duration": "15"
+    },
+    {
+      "type": "niveau",
+      "sb": "40",
+      "bb": "80",
+      "ante": "0",
+      "duration": "15"
+    },
+    {
+      "type": "niveau",
+      "sb": "50",
+      "bb": "100",
+      "ante": "0",
+      "duration": "60"
+    }
+  ],
+  "couleurs": {
+    "default": "#217369",
+    "steps": [
+      {
+        "time": "30:00",
+        "color": "#933557"
+      },
+      {
+        "time": "10:00",
+        "color": "#ffa500"
+      },
+      {
+        "time": "05:00",
+        "color": "#ff0000"
+      },
+      {
+        "time": "00:00",
+        "color": "#8973f7"
+      }
+    ]
+  },
+  "nomTournoi": "Tournoi du 06/06/2025"
+}
