@@ -1,0 +1,52 @@
+#clockDisplay {
+    font-family: 'Roboto Mono', 'Courier New', Courier, monospace;
+    font-size: 6em;
+    letter-spacing: 0.08em;
+    background: transparent;
+    border-radius: 16px;
+    padding: 0.25em 0.3em;
+    box-shadow: none;
+    margin: 20px 0 10px 0;
+    display: inline-block;
+    transition: color 0.3s ease;
+}
+.level-info { font-size: 1.2em; margin-bottom: 0.5em; }
+.level-info strong { font-weight: bold; }
+.next-level-info { font-size: 1.1em; color: #555; margin-bottom: 1.2em; }
+.tab-content { display: none; }
+.tab-content.is-active { display: block; }
+.clock-box-relative { position: relative; }
+.clock-controls-group {
+    position: absolute; top: 15px; left: 15px; z-index: 10;
+    display: flex; gap: 8px;
+}
+.clock-icon-btn {
+    background: none; border: none; border-radius: 50%;
+    width: 2.3em; height: 2.3em; display: flex; align-items: center; justify-content: center;
+    font-size: 1.7em; color: #3273dc; transition: background 0.2s, color 0.2s; cursor: pointer;
+}
+.clock-icon-btn:hover { background: #f3e4e7; color: #933557; }
+.clock-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+@media (max-width: 768px) {
+    #clockDisplay { font-size: 3em; }
+    .clock-controls-group { top: 5px; left: 5px; }
+    .clock-icon-btn { width: 1.7em; height: 1.7em; font-size: 1.1em; }
+}
+.table-input input, .table-input select { width: 100%; }
+.is-pointer { cursor: pointer; }
+.mt-2 { margin-top: 1rem; }
+.mb-2 { margin-bottom: 1rem; }
+.chips-total { font-weight: bold; margin-left: 2rem; }
+.warning-msg { color: #ff8800; font-size: 0.95em; margin-top: 0.5em; }
+.color-default-row td { font-weight: bold; background: #f6f6f6; border-bottom: 1px solid #ddd; }
+.param-level-num { width: 3em; text-align: center; font-weight: bold; background: #f9f9f9; }
+.param-actions { margin-bottom: 1em; }
+.param-global-actions { margin-bottom: 2em; }
+.leaderboard-table th, .leaderboard-table td { text-align: center; }
+.leaderboard-table th { cursor:pointer; user-select:none; }
+.leaderboard-table tbody tr:hover { background-color: #f0f0f0; }
+.import-file-input { display: none; }
+#tournamentSelector { width: 100%; margin-bottom: 1rem; }
+.sort-indicator { font-size: 0.8em; margin-left: 0.2em; }
+.pause-label { font-size: 2em; color: #933557; margin-bottom: 0.5em; font-weight: bold; }
+.pause-row { background: #f8e6e6 !important; color: #933557; font-weight: bold; }
