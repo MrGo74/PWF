@@ -6,6 +6,7 @@ let leaderboardData = {};
 let allTournaments = [];
 let leaderboardSortCol = 2;
 let leaderboardSortAsc = false;
+let placesGenerated = false;
 
 // === Onglets ===
 function showTab(tabName, evt) {
@@ -439,34 +440,32 @@ function loadPlayersParam() {
 }
 
 function syncPlayersToResults() {
-    const playerNames = Array.from(document.querySelectorAll('#playersParamBody tr'))
-        .map(row => row.querySelector('input').value.trim() || `Joueur ${row.rowIndex}`);
-    
+    const playerNames = Array.from(document.querySelectorAll('#playersParamBody tr')).map(row =>
+        row.querySelector('input').value.trim() || `Joueur ${Array.from(row.parentNode.children).indexOf(row)+1}`
+    );
     const tbody = document.getElementById('playerRows');
-    const oldData = Array.from(tbody.children).map(row => ({
-        SD: row.cells[2].querySelector('input').value,
-        R: row.cells[3].querySelector('input').value,
-        SA: row.cells[4].querySelector('input').value,
-        bust: row.cells[5].querySelector('select').value
-    }));
-    
-    tbody.innerHTML = playerNames.map((name, idx) => `
-        <tr>
+
+document.getElementById('resultatsDeTable').style.display = placesGenerated ? '' : 'none';
+
+    tbody.innerHTML = ''; // <-- On vide TOTALEMENT le tableau à chaque synchro
+    playerNames.forEach((name, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
             <td class="player-pos">${idx + 1}</td>
             <td>${name}</td>
-            <td><input class="input" type="number" min="0" value="${oldData[idx]?.SD || 400}" oninput="updateChipsAndWarning()"></td>
-            <td><input class="input" type="number" min="0" value="${oldData[idx]?.R || ''}" oninput="updateChipsAndWarning()"></td>
-            <td><input class="input" type="number" min="0" value="${oldData[idx]?.SA || ''}" oninput="updateChipsAndWarning()"></td>
+            <td><input class="input" type="number" min="0" value="400" placeholder="Stack Départ" oninput="updateChipsAndWarning()"></td>
+            <td><input class="input" type="number" min="0" value="" placeholder="Recave" oninput="updateChipsAndWarning()"></td>
+            <td><input class="input" type="number" min="0" value="" placeholder="Stack Arrivée" oninput="updateChipsAndWarning()"></td>
             <td>
                 <div class="select is-fullwidth">
                     <select onchange="updateChipsAndWarning()">
-                        ${getBustOptions(oldData[idx]?.bust, playerNames.length)}
+                        ${getBustOptions('', playerNames.length)}
                     </select>
                 </div>
             </td>
-        </tr>
-    `).join('');
-    
+        `;
+        tbody.appendChild(tr);
+    });
     updateBustRankOptions();
     updateChipsAndWarning();
 }
@@ -515,27 +514,49 @@ function updateChipsAndWarning() {
 
 function shufflePlayers() {
     const tbody = document.getElementById('playerRows');
-    const rows = Array.from(tbody.children)
-        .map(row => ({
-            html: row.innerHTML,
-            values: Array.from(row.querySelectorAll('input, select')).map(el => el.value)
-        }));
-    
+    const rows = Array.from(tbody.children);
+
+ placesGenerated = true;
+    document.getElementById('resultatsDeTable').style.display = '';
+
+    // Mélange les lignes
     for (let i = rows.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [rows[i], rows[j]] = [rows[j], rows[i]];
     }
-    
-    tbody.innerHTML = rows.map(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = row.html;
-        Array.from(tr.querySelectorAll('input, select')).forEach((el, i) => el.value = row.values[i]);
-        return tr.outerHTML;
-    }).join('');
-    
+    tbody.innerHTML = '';
+    // Ajoute les lignes dans l'ordre mélangé, mais on va les faire apparaître du bas vers le haut
+    rows.forEach(row => {
+        row.classList.remove('fade-in-row');
+        tbody.appendChild(row);
+    });
     updateBustRankOptions();
     updateChipsAndWarning();
+
+    // Fading du bas vers le haut avec attente de 1.5s entre chaque
+    const total = rows.length;
+    function fadeInRow(idx) {
+        if (idx < 0) return;
+        const row = rows[idx];
+        row.classList.add('fade-in-row');
+        row.style.animationDelay = '0s';
+        setTimeout(() => {
+            row.style.opacity = 1;
+            row.classList.remove('fade-in-row');
+            fadeInRow(idx - 1);
+        }, 2000);
+    }
+    // D'abord, toutes les lignes sont invisibles
+    rows.forEach(row => row.style.opacity = 0);
+    // Lance le fading du dernier vers le premier
+    fadeInRow(total - 1);
+    // Met à jour la colonne # à chaque randomisation
+    rows.forEach((row, idx) => {
+        row.querySelector('.player-pos').textContent = idx + 1;
+    });
 }
+
+
 
 function calculate() {
     const players = getPlayers();
@@ -930,6 +951,9 @@ function importSnapshot(event) {
 window.onload = function() {
     // Initialisation des joueurs
     clearPlayersParam();
+ 	 placesGenerated = false;
+
+
     addPlayerParamRow("Alice");
     addPlayerParamRow("Bob");
     syncPlayersToResults();
@@ -953,6 +977,10 @@ window.onload = function() {
     // Nom du tournoi
     document.getElementById('tournamentNameInput').value = `Tournoi du ${new Date().toLocaleDateString('fr-FR')}`;
     updateTournamentNameDisplay();
+
+  // Masquer le tableau de resultat
+document.getElementById('resultatsDeTable').style.display = 'none';
+   
     
     // Événements
     document.getElementById('tournamentNameInput').addEventListener('input', updateTournamentNameDisplay);

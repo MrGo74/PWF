@@ -50,3 +50,13 @@
 .sort-indicator { font-size: 0.8em; margin-left: 0.2em; }
 .pause-label { font-size: 2em; color: #933557; margin-bottom: 0.5em; font-weight: bold; }
 .pause-row { background: #f8e6e6 !important; color: #933557; font-weight: bold; }
+
+
+@keyframes fadeInRow {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.fade-in-row {
+    opacity: 0;
+    animation: fadeInRow 1s forwards;
+}
